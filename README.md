@@ -11,8 +11,9 @@ Anti-theft inventory and POS backend for food cart & micro-franchise businesses 
 ### Desktop View
 
 <p align="center">
-  <img src="public/images/PC-Dashboard.webp" alt="NITA Desktop Dashboard" width="48%">
-  <img src="public/images/PC-NITA-Sign-in.webp" alt="NITA Desktop Sign-in Page" width="48%">
+  <img src="public/images/PC-Dashboard.webp" alt="NITA Desktop Dashboard" width="800">
+  <br/>
+  <img src="public/images/PC-NITA-Sign-in.webp" alt="NITA Desktop Sign-in Page" width="800">
 </p>
 
 ### Mobile View
