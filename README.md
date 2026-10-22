@@ -11,9 +11,9 @@ Anti-theft inventory and POS backend for food cart & micro-franchise businesses 
 ### Desktop View
 
 <p align="center">
-  <img src="public/images/PC-Dashboard.webp" alt="NITA Desktop Dashboard" width="800">
-  <br/>
   <img src="public/images/PC-NITA-Sign-in.webp" alt="NITA Desktop Sign-in Page" width="800">
+  <br/>
+  <img src="public/images/PC-Dashboard.webp" alt="NITA Desktop Dashboard" width="800">
 </p>
 
 ### Mobile View
@@ -41,11 +41,11 @@ Requirements: PHP 8.3+, Composer, MySQL. (Mail is optional — set the `MAIL_*` 
 
 ## Test Accounts (seeded)
 
-| Role | Login | Credentials | Access |
-|---|---|---|---|
-| Super Admin | `POST /api/auth/admin-login` | `owner@inventory.test` / `password123` | All branches, all endpoints, global dashboard |
-| Manager | `POST /api/auth/admin-login` | `manager@inventory.test` / `password123` | Own branch only (Branch QC, id=1) |
-| Staff | `POST /api/auth/staff-login` | pin `1234` + `branch_id: 1` | POS checkout, shifts, catalog reads |
+| Role        | Login                        | Credentials                              | Access                                        |
+| ----------- | ---------------------------- | ---------------------------------------- | --------------------------------------------- |
+| Super Admin | `POST /api/auth/admin-login` | `owner@inventory.test` / `password123`   | All branches, all endpoints, global dashboard |
+| Manager     | `POST /api/auth/admin-login` | `manager@inventory.test` / `password123` | Own branch only (Branch QC, id=1)             |
+| Staff       | `POST /api/auth/staff-login` | pin `1234` + `branch_id: 1`              | POS checkout, shifts, catalog reads           |
 
 The **owner web dashboard** (Blade) is at `http://127.0.0.1:8000/login` — super admin account only.
 
@@ -74,24 +74,24 @@ Send the token on every request: `Authorization: Bearer <token>`. Tokens last 8 
 
 ### 3. Response conventions (for your Loading/Success/Error states)
 
-| Status | Meaning | What to show |
-|---|---|---|
-| `200` / `201` | Success | Render data |
-| `401` `{"message": "Unauthenticated."}` | No/expired token | Redirect to login |
-| `403` `{"message": "Forbidden: ..."}` | Role or branch not allowed | "No access" state — **expected** for managers touching other branches or staff hitting supervisory endpoints |
-| `422` | Validation / business rule | Show `errors` field messages; insufficient stock returns `{ error, needed, available }` |
+| Status                                  | Meaning                    | What to show                                                                                                 |
+| --------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `200` / `201`                           | Success                    | Render data                                                                                                  |
+| `401` `{"message": "Unauthenticated."}` | No/expired token           | Redirect to login                                                                                            |
+| `403` `{"message": "Forbidden: ..."}`   | Role or branch not allowed | "No access" state — **expected** for managers touching other branches or staff hitting supervisory endpoints |
+| `422`                                   | Validation / business rule | Show `errors` field messages; insufficient stock returns `{ error, needed, available }`                      |
 
 List endpoints (`/transactions`, `/receipts`, `/alerts`, `/shifts`, `/notifications`, `/stock/{id}/movements`) return Laravel pagination: `{ data: [...], current_page, last_page, total, ... }`.
 
 ### 4. Role matrix (who can call what)
 
-| Endpoint group | Staff | Manager | Super Admin |
-|---|---|---|---|
-| POS: `POST /transactions`, `POST /receipts/scan` | ✅ own branch | ✅ own branch | ✅ any |
-| Catalog reads: `/products`, `/ingredients`, `/recipes` | ✅ | ✅ | ✅ |
-| Shifts: `/shifts/open`, `/shifts/close` | ✅ | ✅ | ❌ |
-| Staff CRUD, reports, alerts, shifts/transactions lists, stock & restock | ❌ | ✅ own branch | ✅ any |
-| Branch CRUD, product/ingredient/recipe writes, `/dashboard` | ❌ | ❌ | ✅ |
+| Endpoint group                                                          | Staff         | Manager       | Super Admin |
+| ----------------------------------------------------------------------- | ------------- | ------------- | ----------- |
+| POS: `POST /transactions`, `POST /receipts/scan`                        | ✅ own branch | ✅ own branch | ✅ any      |
+| Catalog reads: `/products`, `/ingredients`, `/recipes`                  | ✅            | ✅            | ✅          |
+| Shifts: `/shifts/open`, `/shifts/close`                                 | ✅            | ✅            | ❌          |
+| Staff CRUD, reports, alerts, shifts/transactions lists, stock & restock | ❌            | ✅ own branch | ✅ any      |
+| Branch CRUD, product/ingredient/recipe writes, `/dashboard`             | ❌            | ❌            | ✅          |
 
 Managers and staff get `403` on any `branch_id` that isn't theirs — the frontend should scope branch pickers accordingly.
 
@@ -99,21 +99,21 @@ Managers and staff get `403` on any `branch_id` that isn't theirs — the fronte
 
 ## API Overview
 
-| Area | Endpoints |
-|---|---|
-| Auth | `POST /api/auth/admin-login`, `POST /api/auth/staff-login`, `POST /api/auth/logout`, `GET /api/auth/me` |
-| Products | `GET/POST /api/products`, `GET/PUT/DELETE /api/products/{id}` |
-| Ingredients | `GET/POST /api/ingredients`, `GET/PUT/DELETE /api/ingredients/{id}` |
-| Recipes (formulas) | `GET /api/recipes?product_id=`, `POST /api/recipes`, `GET/PUT/DELETE /api/recipes/{id}` |
-| Branches | `GET/POST /api/branches`, `GET/PUT/DELETE /api/branches/{id}`, `GET /api/branches/{id}/stock` |
-| Stock | `POST /api/stock` (initial), `POST /api/stock/restock`, `GET /api/stock/low-stock?branch_id=`, `GET /api/stock/{id}/movements` |
-| POS / Transactions | `POST /api/transactions` (auto recipe deduction, race-safe), `GET /api/transactions?branch_id=`, `GET /api/transactions/{id}` |
-| Shifts | `POST /api/shifts/open`, `POST /api/shifts/close` (auto variance → alert), `GET /api/shifts?branch_id=`, `GET /api/shifts/{id}` |
-| Alerts | `GET /api/alerts?branch_id=`, `GET /api/alerts/{id}`, `PUT /api/alerts/{id}/review`, `PUT /api/alerts/{id}/dismiss` |
-| Reports | `GET /api/reports/sales?branch_id=&period=daily|weekly|monthly`, `GET /api/reports/inventory?branch_id=` |
-| Notifications | `GET /api/notifications`, `PUT /api/notifications/{id}/read` |
-| Receipts (OCR) | `POST /api/receipts/scan`, `GET /api/receipts?branch_id=`, `GET /api/receipts/summary?branch_id=`, `GET /api/receipts/{id}` |
-| Dashboard | `GET /api/dashboard` (super admin, global counts) |
+| Area               | Endpoints                                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------- |
+| Auth               | `POST /api/auth/admin-login`, `POST /api/auth/staff-login`, `POST /api/auth/logout`, `GET /api/auth/me`                         |
+| Products           | `GET/POST /api/products`, `GET/PUT/DELETE /api/products/{id}`                                                                   |
+| Ingredients        | `GET/POST /api/ingredients`, `GET/PUT/DELETE /api/ingredients/{id}`                                                             |
+| Recipes (formulas) | `GET /api/recipes?product_id=`, `POST /api/recipes`, `GET/PUT/DELETE /api/recipes/{id}`                                         |
+| Branches           | `GET/POST /api/branches`, `GET/PUT/DELETE /api/branches/{id}`, `GET /api/branches/{id}/stock`                                   |
+| Stock              | `POST /api/stock` (initial), `POST /api/stock/restock`, `GET /api/stock/low-stock?branch_id=`, `GET /api/stock/{id}/movements`  |
+| POS / Transactions | `POST /api/transactions` (auto recipe deduction, race-safe), `GET /api/transactions?branch_id=`, `GET /api/transactions/{id}`   |
+| Shifts             | `POST /api/shifts/open`, `POST /api/shifts/close` (auto variance → alert), `GET /api/shifts?branch_id=`, `GET /api/shifts/{id}` |
+| Alerts             | `GET /api/alerts?branch_id=`, `GET /api/alerts/{id}`, `PUT /api/alerts/{id}/review`, `PUT /api/alerts/{id}/dismiss`             |
+| Reports            | `GET /api/reports/sales?branch_id=&period=daily                                                                                 | weekly | monthly`, `GET /api/reports/inventory?branch_id=` |
+| Notifications      | `GET /api/notifications`, `PUT /api/notifications/{id}/read`                                                                    |
+| Receipts (OCR)     | `POST /api/receipts/scan`, `GET /api/receipts?branch_id=`, `GET /api/receipts/summary?branch_id=`, `GET /api/receipts/{id}`     |
+| Dashboard          | `GET /api/dashboard` (super admin, global counts)                                                                               |
 
 Full request/response examples are in the Postman collection.
 
